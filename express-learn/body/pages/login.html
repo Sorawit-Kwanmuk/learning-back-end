@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Login</title>
 </head>
 
 <body>
@@ -15,11 +15,13 @@
         <li><a href="/contact">Contact</a></li>
         <li><a href="/login">Login</a></li>
     </ul>
-
-    <script src="main.js">
-
-    </script>
-
+    <!-- enctype="multipart/form-data" ใช้ส่ง File -->
+    <form action="/post-login" method="POST">
+        <input type="text" name="username" placeholder="username">
+        <input type="text" name="password" placeholder="Password">
+        <!-- <input type="file" name="file" placeholder="File"> -->
+        <button>Login</button>
+    </form>
 </body>
 
 </html>
