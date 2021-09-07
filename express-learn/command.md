@@ -27,3 +27,4 @@
   > update major ถ้าเปลี่ยนแปลงรุ่น major จะอัพเดททั้งหมด
 - `mkdir ชื่อโฟลเดอร์ที่จะสร้าง`
 - `npm i cors`
+- `npm i ejs`
