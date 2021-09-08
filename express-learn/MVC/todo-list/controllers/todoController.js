@@ -1,110 +1,157 @@
-const { readFile, writeFile } = require('fs');
+const { readFile, writeFile } = require('fs/promises');
+const { v4: uuidv4 } = require('uuid');
+
+const readTodo = async () => {
+  const data = await readFile('dbs/todoLists.json');
+  return JSON.parse(data);
+  //ทุกฟังก์ชั่นที่ใช้ async function จะ return ค่าเป็น promise object
+  //ต้อมมี resolve ถึงจะ return JSON.parse(data);
+};
+// const saveTodo = async data => {
+//   await writeFile('dbs/todoLists.json', JSON.stringify(data));
+// };
+//ค่าที่ return เป็น promist อยู่แล้วไม่ต้องใส่ async ก็ได้
+const saveTodo = data => writeFile('dbs/todoLists.json', JSON.stringify(data));
+const validateTodo = todo => {
+  const { list, completed, dueDate } = todo;
+  if (list === undefined) {
+    return {
+      message: 'list is required ',
+    };
+  }
+  if (typeof list !== 'string') {
+    return {
+      message: 'list must be a string',
+    };
+  }
+  if (!list.trim()) {
+    return {
+      message: 'list is required ',
+    };
+  }
+  if (typeof completed !== 'undefined' && typeof completed !== 'boolean') {
+    return {
+      message: 'completed must be a boolean',
+    };
+  }
+  if (typeof dueDate !== 'undefined' && typeof dueDate !== 'string') {
+    return {
+      message: 'dueDate must be a string',
+    };
+  }
+  if (dueDate && isNaN(new Date(dueDate).getTime())) {
+    return {
+      message: 'invalid format date string',
+    };
+  }
+  return '';
+};
+
+exports.checkExistTodoId = async (req, res, next) => {
+  const { id } = req.params;
+  const todos = await readTodo();
+  const index = todos.findIndex(item => item.id === id);
+  if (index === -1) {
+    return res.status(400).json({ message: 'invalid todo id' });
+  }
+  req.todos = todos; //เพิ่ม key value  todos,index ไปให้กับ middilware ตัวถัดไป
+  req.index = index;
+  next();
+};
+
+exports.validateTodo = (req, res, next) => {
+  const validateError = validateTodo(req.body);
+  if (validateError) {
+    return res.status(400).json({ message: validateError.message });
+  }
+  next();
+};
+
 exports.getAllTodo = async (req, res, next) => {
   try {
-    const result = await readFile('../dbs/todoLists.json');
-    const arrTodo = JSON.parse(result);
-    res.status(200).json({ result: arrTodo });
+    const { list, completed } = req.query;
+    const todos = await readTodo();
+    const filteredTodos = todos.filter(
+      item =>
+        (list === undefined ||
+          item.list.toLowerCase().includes(list.toLowerCase())) &&
+        (completed === undefined ||
+          !['true', 'false'].includes(completed.toLowerCase()) ||
+          '' + item.completed === completed)
+    );
+    res.status(200).json({ data: filteredTodos });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
-exports.getTodoById = async (req, res, next) => {
+exports.getTodo = async (req, res, next) => {
   try {
-  } catch (error) {}
+    const { id } = req.params;
+    const todos = await readTodo();
+    const foundTodo = todos.find(item => item.id === id);
+    // if (!foundTodo) {
+    //   res.status(200).json({ todo: null });
+    // }
+    // res.status(200).json({ foundTodo });
+
+    res.status(200).json({ data: foundTodo ?? null });
+  } catch (error) {
+    next(error);
+  }
 };
 
 exports.createTodo = async (req, res, next) => {
   try {
-    const body = req.body;
-    if (
-      body.list === undefined ||
-      typeof body.list !== 'string' ||
-      body.list.trim() === ''
-    ) {
-      res
-        .status(400)
-        .json({ message: 'list is required and must be a string' });
-    } else if (
-      typeof body.completed !== 'undefined' &&
-      typeof body.list !== 'boolean'
-    ) {
-      res
-        .status(400)
-        .send({ message: 'list is required and must be a boolean' });
-    } else {
-      const newTodo = {
-        id: uuidv4(),
-        list: body.list,
-        completed: body.completed || false,
-        dueDate: isNaN(new Date(body.dueDate).getTime()) ? null : body.dueDate,
-      };
-      const result = readFile('../dbs/todoLists.json', 'utf8');
-      const arrTodo = JSON.parse(await result);
-      arrTodo.push(newTodo);
-      await writeFile('../dbs/todoLists.json', JSON.stringify(arrTodo));
-      res.status(201).json({ result: newTodo });
-    }
+    const { list, completed, dueDate } = req.body;
+
+    const todos = await readTodo();
+    const todo = {
+      id: uuidv4(),
+      list,
+      completed: completed ?? false,
+      dueDate: dueDate ? new Date(dueDate) : null,
+    };
+    todos.push(todo);
+    await saveTodo(todos);
+    res.status(201).json({ data: todo });
   } catch (error) {
-    res.status(500).send({ result: newTodo });
+    next(error);
   }
 };
 exports.updateTodo = async (req, res, next) => {
   try {
-    const query = req.query;
-    const body = req.body;
-    if (
-      body.list === undefined ||
-      typeof body.list !== 'string' ||
-      body.list.trim() === ''
-    ) {
-      res
-        .status(400)
-        .json({ message: 'list is required and must be a string' });
-    } else if (
-      typeof body.completed !== 'undefined' &&
-      typeof body.list !== 'boolean'
-    ) {
-      res
-        .status(400)
-        .send({ message: 'list is required and must be a boolean' });
-    } else {
-      const result = await readFile('../dbs/todoLists.json', 'utf8');
-      const arrTodo = JSON.parse(result);
-      const index = arrTodo.findIndex(item => item.id === query.id);
-      if (index !== -1) {
-        arrTodo[index].list = {
-          id: query.id,
-          list: body.list,
-          completed: body.completed || false,
-          dueDate: isNaN(new Date(body.dueDate).getTime())
-            ? null
-            : body.dueDate,
-        };
-        await writeFile('../dbs/todoLists.json', JSON.stringify(arrTodo));
-        res.status(200).json({ message: 'Successfully update' });
-      } else {
-        res.status(404).json({ message: 'Todo with this id is Not Found' });
-      }
-    }
+    const { id } = req.params;
+    const { list, completed, dueDate } = req.body;
+
+    const { todos, index } = req;
+
+    todos[index] = {
+      id,
+      list,
+      completed: completed ?? todos[index].completed,
+      dueDate: dueDate ? new Date(dueDate) : null,
+    };
+    await saveTodo(todos);
+    res.status(200).json({ data: todos[index] });
   } catch (error) {
-    res.status(500).send({ result: newTodo });
+    next(error);
   }
 };
 exports.deleteTodo = async (req, res, next) => {
   try {
-    const params = req.params;
-    console.log(params);
-    const result = await readFile('../dbs/todoLists.json', 'utf8');
-    const arrTodo = JSON.parse(result);
-    const index = arrTodo.findIndex(item => item.id === params.id);
-    if (index !== -1) {
-      arrTodo.splice(index, 1);
-      await writeFile('../dbs/todoLists.json', JSON.stringify(arrTodo));
-      res.status(204).json({ message: 'Delete todo successfully' });
-    } else {
-      res.status(400).json({ message: 'Todo not found' });
-    }
+    const { todos, index } = req;
+    todos.splice(index, 1);
+    await saveTodo(todos);
+    res.status(204).json({ message: 'todo is deleted' });
   } catch (error) {
-    res.status(500).send({ message: error.message });
+    next(error);
   }
 };
+
+// exports.getTodoByFilter = async (req, res, next) => {
+//   try {
+
+//   } catch (error) {
+//     next(error);
+//   }
+// };
