@@ -10,6 +10,7 @@ const path = require('path');
 // });
 //ถ้า Content-Type เป็น application/x-www-form-urlencoded ให้ใช้ body-parser
 app.use(express.urlencoded({ extended: false }));
+
 //extended: false คือ การเลือก library
 // extended: false; =>   library =>  qs JSON.parse username=12345&password=6789 to javascript object
 // extended: true; =>    library querystring =>  qsJSON.parse   แปลง JSON string เป็น javascript object
