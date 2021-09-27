@@ -5,3 +5,4 @@
   "start": "nodemon index.js",
   "test": "echo \"Error: no test specified\" && exit 1"
   },
+- `npm i -g sequelize-cli`

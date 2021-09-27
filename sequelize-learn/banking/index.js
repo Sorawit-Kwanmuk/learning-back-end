@@ -250,13 +250,13 @@ const {
 // afterRelationDatabase();
 
 //******************************************* Raw Query ********************************************************* */
-const rawQuery = async () => {
-  //หา Sum ของ balance และชื่อ ในแต่ละบัญชี
-  const sql =
-    'select c.first_name as first_name, sum(balance) as total From accounts a left join customers c on a.customer_id = c.id group by c.id';
-  const arrResult = await sequelize.query(sql, { type: QueryTypes.SELECT });
+// const rawQuery = async () => {
+//   //หา Sum ของ balance และชื่อ ในแต่ละบัญชี
+//   const sql =
+//     'select c.first_name as first_name, sum(balance) as total From accounts a left join customers c on a.customer_id = c.id group by c.id';
+//   const arrResult = await sequelize.query(sql, { type: QueryTypes.SELECT });
 
-  console.log(JSON.stringify(arrResult, null, 2));
-};
+//   console.log(JSON.stringify(arrResult, null, 2));
+// };
 
-rawQuery();
+// rawQuery();

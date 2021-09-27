@@ -1,0 +1,4 @@
+- `npm init -y`
+- `npm i bcryptjs`
+- `npm i sequelize mysql2`
+- `npm i jsonwebtoken`
