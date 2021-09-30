@@ -9,6 +9,7 @@ const express = require('express');
 const cors = require('cors');
 const authRoute = require('./routes/authRoute');
 const listRoute = require('./routes/listRoute');
+const errorController = require('./controllers/errorController');
 
 const app = express();
 
@@ -30,18 +31,7 @@ app.use((req, res, next) => {
 });
 
 //error handling middleware
-app.use((err, req, res, next) => {
-  console.log(err);
-
-  if (err.name === 'JsonWebTokenError') {
-    res.status(401).json({
-      message: err.message,
-    });
-  }
-  res.status(500).json({
-    message: err.message,
-  });
-});
+app.use(errorController);
 
 const port = process.env.PORT || 8000;
 

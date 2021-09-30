@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
+const CustomError = require('../utils/error');
 
 exports.authenticate = async (req, res, next) => {
   try {
@@ -49,7 +50,9 @@ exports.register = async (req, res, next) => {
   try {
     const { username, email, password, confirmPassword } = req.body;
     if (password !== confirmPassword) {
-      return res.status(400).json({ message: 'Passwords do not match' });
+      // return res.status(400).json({ message: 'Passwords do not match' });
+
+      throw new CustomError('Passwords do not match', 400);
     }
     const hashedPassword = await bcrypt.hash(password, 10); //10 คือ salt
     await User.create({
@@ -89,7 +92,8 @@ exports.login = async (req, res, next) => {
     };
     const secretKey = process.env.JWT_SECRET_KEY;
     const token = jwt.sign(payload, secretKey, {
-      expiresIn: '30d',
+      // expiresIn: '30d',
+      expiresIn: 5,
     });
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
